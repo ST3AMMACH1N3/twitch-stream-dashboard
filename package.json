@@ -1,0 +1,28 @@
+{
+  "name": "twitch-stream-dashboard",
+  "version": "0.0.1",
+  "description": "An application to allow streamers to control chatbots, get notifications, and see stream analytics all in one place.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ST3AMMACH1N3/twitch-stream-dashboard.git"
+  },
+  "author": "Benjamin Houston",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ST3AMMACH1N3/twitch-stream-dashboard/issues"
+  },
+  "homepage": "https://github.com/ST3AMMACH1N3/twitch-stream-dashboard#readme",
+  "dependencies": {
+    "dotenv": "^8.0.0",
+    "express": "^4.17.1",
+    "express-handlebars": "^3.1.0",
+    "mysql2": "^1.6.5",
+    "sequelize": "^5.8.9",
+    "tmi.js": "^1.4.2"
+  }
+}
