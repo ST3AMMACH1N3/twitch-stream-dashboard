@@ -1,5 +1,5 @@
 {
-  "name": "twitch-stream-dashboard",
+  "name": "stanbot",
   "version": "0.0.1",
   "description": "An application to allow streamers to control chatbots, get notifications, and see stream analytics all in one place.",
   "main": "server.js",
@@ -18,9 +18,12 @@
   },
   "homepage": "https://github.com/ST3AMMACH1N3/twitch-stream-dashboard#readme",
   "dependencies": {
+    "axios": "^0.19.0",
+    "cookie-parser": "^1.4.4",
     "dotenv": "^8.0.0",
     "express": "^4.17.1",
     "express-handlebars": "^3.1.0",
+    "jsonwebtoken": "^8.5.1",
     "mysql2": "^1.6.5",
     "sequelize": "^5.8.9",
     "tmi.js": "^1.4.2"
