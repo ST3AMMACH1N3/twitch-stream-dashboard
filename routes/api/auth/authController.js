@@ -1,9 +1,12 @@
 const axios = require('axios');
-const { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET } = process.env;
-const redirectURI = 'http://localhost:3000/api/auth';
+const { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, MY_URL } = process.env;
+const myURL = MY_URL || 'http://localhost:3000';
+const redirectURI = `${myURL}/api/auth`;
 const baseAuthURL = 'https://id.twitch.tv/oauth2';
 const jwt = require('jsonwebtoken');
 const { addUser } = require('../../api/user/userController');
+const globals = require('../../../config/globals');
+
 
 exports.getAppAccessToken = () => {
     const url = `${baseAuthURL}/token`;
@@ -11,7 +14,7 @@ exports.getAppAccessToken = () => {
     axios
         .post(`${url}?client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}&grant_type=${grantType}`)
         .then(response => {
-            console.log(response);
+            globals.appAccessToken = response.data.access_token;
         })
         .catch(err => console.log(err));
 }
@@ -59,7 +62,7 @@ exports.authenticateUser = async (req, res) => {
         return res.json({ msg: 'The token we recieved could not be verified' });
     }
     res.cookie('identifier', sub);
-    let created = await addUser({ identifier: sub, preferred_username, refresh_token });
+    let created = await addUser({ identifier: sub, preferred_username, refresh_token, access_token });
     if (created) {
         return res.redirect('/tutorial');
     }
@@ -87,4 +90,19 @@ exports.refreshToken = (refreshToken, accessToken) => {
         .catch(err => {
             console.log(err);
         })
+}
+
+exports.validateToken = accessToken => {
+    axios
+        .get(`${baseAuthURL}/validate`, { headers: { Authorization: `OAuth ${accessToken}` } })
+        .then(response => {
+            console.log(response);
+        })
+        .catch(err => console.log(err));
+}
+
+exports.respondToVerification = (req, res) => {
+    console.log('Respond to verification')
+    console.log(req);
+    res.end();
 }

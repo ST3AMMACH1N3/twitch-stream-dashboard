@@ -22,6 +22,9 @@ app.engine('handlebars',
 
 app.set('view engine', 'handlebars');
 
+const { getAppAccessToken } = require('./routes/api/auth/authController');
+getAppAccessToken();
+
 app.use(routes);
 
 db.sequelize
