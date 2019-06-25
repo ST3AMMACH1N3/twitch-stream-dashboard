@@ -3,6 +3,7 @@ const globals = require('../../../config/globals');
 const axios = require('axios');
 const subscriptionURL = 'https://api.twitch.tv/helix/webhooks/hub';
 const myURL = process.env.MY_URL || 'http://localhost:3000';
+const errorHandler = require('../../../controllers/errorHandler');
 
 exports.addUser = user => {
     console.log('Adding user');
@@ -37,7 +38,7 @@ exports.removeUser = identifier => {
     } 
 }
 
-exports.subscribeToEvents = identifier => {
+exports.subscribeToEvents = (identifier, isRetry) => {
     console.log('Subscribing to events');
     if (identifier && globals.users[identifier]) {
         const callback = `${myURL}/api/user`,
@@ -60,11 +61,16 @@ exports.subscribeToEvents = identifier => {
                 console.log('Failed to Subscribe to stream changes');
             }
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            let response = errorHandler(err, identifier);
+            if (response && !isRetry) {
+                exports.subscribeToEvents(identifier, true);
+            }
+        });
     }
 }
 
-exports.unsubscribeFromEvents = identifier => {
+exports.unsubscribeFromEvents = (identifier, isRetry) => {
     console.log('Unsubscribing from events');
     if (identifier && globals.users[identifier]) {
         const callback = `${myURL}/api/user`,
@@ -79,15 +85,20 @@ exports.unsubscribeFromEvents = identifier => {
             if (followResponse.status >= 200 && followResponse.status < 300) {
                 console.log('Unsubscribing from follows');
             } else {
-                console.log('Failed to Subscribe to follows');
+                console.log('Failed to unsubscribe from follows');
             }
             if (streamResponse.status >= 200 && streamResponse.status < 300) {
                 console.log('Unsubscribing from stream changes');
             } else {
-                console.log('Failed to Subscribe to stream changes');
+                console.log('Failed to unsubscribe from stream changes');
             }
         })
-        .catch(err => console.log(err));
+        .catch(err => {
+            let response = errorHandler(err, identifier);
+            if (response && !isRetry) {
+                exports.unsubscribeFromEvents(identifier, true);
+            }
+        });
     }
 }
 

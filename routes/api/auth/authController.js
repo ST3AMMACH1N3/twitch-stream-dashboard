@@ -77,19 +77,20 @@ exports.revokeAccessToken = token => {
         .catch(err => console.log(err));
 }
 
-exports.refreshToken = (refreshToken, accessToken) => {
-    const url = `${baseAuthURL}/token--data-urlencode`;
+exports.refreshToken = async (refreshToken, accessToken) => {
+    const url = `${baseAuthURL}/token`;
     const grantType = 'refresh_token';
-    axios
-        .post(`${url}?grant_type=${grantType}&refresh_token=${refreshToken}&client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}`)
-        .then(response => {
-            if (response.status == 200) {
-                
-            }
-        })
-        .catch(err => {
-            console.log(err);
-        })
+    return axios
+            .post(`${url}?grant_type=${grantType}&refresh_token=${refreshToken}&client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}`)
+            .then(response => {
+                if (response.status == 200) {
+                    return response.data;
+                }
+                return null
+            })
+            .catch(err => {
+                console.log(err);
+            })
 }
 
 exports.validateToken = accessToken => {

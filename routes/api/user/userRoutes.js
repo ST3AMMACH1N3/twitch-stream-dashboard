@@ -1,6 +1,7 @@
 const router = require('express').Router();
-const { validateToken, respondToVerification } = require('../auth/authController');
-const { updateFollowers, updateStream, unsubscribeFromEvents, getSubscriptions, removeUser } = require('../user/userController');
+const { validateToken, refreshToken, respondToVerification } = require('../auth/authController');
+const { addUser, updateFollowers, updateStream, unsubscribeFromEvents, getSubscriptions, removeUser } = require('../user/userController');
+const globals = require('../../../config/globals');
 
 router.get('/unsubscribe', (req, res) => {
     const { identifier } = req.cookies;
@@ -16,6 +17,20 @@ router.get('/remove', (req, res) => {
         removeUser(identifier);
         res.json({ msg: 'User removed' });
     }
+})
+
+router.get('/refresh', (req, res) => {
+    const { identifier } = req.cookies;
+    if (identifier && globals.users[identifier]) {
+        let token = awaitrefreshToken(globals.users[identifier].refresh_token);
+        if (token) {
+            globals.users[identifier].refresh_token = token.refresh_token;
+            globals.users[identifier].access_token = token.access_token;
+            addUser(globals.users[identifier]);
+            return res.json({ msg: 'Token refreshed' });
+        }
+    }
+    res.json({ msg: 'Could not refresh token' });
 })
 
 router.get('/subscriptions', (req, res) => {
