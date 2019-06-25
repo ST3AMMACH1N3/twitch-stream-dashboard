@@ -34,6 +34,9 @@ exports.addUser = user => {
 
 exports.removeUser = identifier => {
     if (identifier && globals.users[identifier]) {
+        console.log(identifier);
+        console.log(globals.users);
+        console.log(globals.users[identifier]);
         delete global.users[identifier];
     } 
 }

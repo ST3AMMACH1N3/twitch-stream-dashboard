@@ -22,7 +22,7 @@ router.get('/remove', (req, res) => {
 router.get('/refresh', (req, res) => {
     const { identifier } = req.cookies;
     if (identifier && globals.users[identifier]) {
-        let token = awaitrefreshToken(globals.users[identifier].refresh_token);
+        let token = await refreshToken(globals.users[identifier].refresh_token);
         if (token) {
             globals.users[identifier].refresh_token = token.refresh_token;
             globals.users[identifier].access_token = token.access_token;
