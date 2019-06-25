@@ -19,7 +19,7 @@ router.get('/remove', (req, res) => {
     }
 })
 
-router.get('/refresh', (req, res) => {
+router.get('/refresh', async (req, res) => {
     const { identifier } = req.cookies;
     if (identifier && globals.users[identifier]) {
         let token = await refreshToken(globals.users[identifier].refresh_token);
