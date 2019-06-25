@@ -33,7 +33,7 @@ exports.addUser = user => {
 
 exports.removeUser = identifier => {
     if (identifier && globals.users[identifier]) {
-        exports.unsubscribeFromEvents
+        delete global.users[identifier];
     } 
 }
 

@@ -1,12 +1,20 @@
 const router = require('express').Router();
 const { validateToken, respondToVerification } = require('../auth/authController');
-const { updateFollowers, updateStream, unsubscribeFromEvents, getSubscriptions } = require('../user/userController');
+const { updateFollowers, updateStream, unsubscribeFromEvents, getSubscriptions, removeUser } = require('../user/userController');
 
 router.get('/unsubscribe', (req, res) => {
     const { identifier } = req.cookies;
     if (identifier) {
         unsubscribeFromEvents(identifier);
         res.json({ msg: 'Unsubscribed' });
+    }
+})
+
+router.get('/remove', (req, res) => {
+    const { identifier } = req.cookies;
+    if (identifier) {
+        removeUser(identifier);
+        res.json({ msg: 'User removed' });
     }
 })
 
