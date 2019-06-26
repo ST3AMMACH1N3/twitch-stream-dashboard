@@ -5,6 +5,14 @@ const subscriptionURL = 'https://api.twitch.tv/helix/webhooks/hub';
 const myURL = process.env.MY_URL || 'http://localhost:3000';
 const errorHandler = require('../../../controllers/errorHandler');
 
+exports.findUser = identifier => {
+    return db.User.findOne({
+                where: {
+                    identifier
+                }
+            })
+}
+
 exports.addUser = user => {
     console.log('Adding user');
     const { identifier } = user;

@@ -18,10 +18,14 @@ module.exports = (sequelize, DataTypes) => {
         refresh_token: {
             type: DataTypes.STRING
         },
-        // access_token: {
-        //     type: DataType.STRING
-        // }
+        access_token: {
+            type: DataTypes.STRING
+        }
     });
+
+    User.associate = function(models) {
+        models.User.hasMany(models.Stream);
+    }
 
     return User;
 }
