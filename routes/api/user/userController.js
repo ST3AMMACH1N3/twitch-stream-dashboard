@@ -11,16 +11,39 @@ exports.addUser = user => {
     if (identifier) {
         if (!globals.users[identifier]) {
             exports.getSubscriptions()
-            .then(response => {
-                console.log(response.data.total);
-                let found = response.data.data.find(sub => {
-                    return (sub.callback.includes(identifier));
+                .then(response => {
+                    console.log(response.data.total);
+                    return  response.data.data.find(sub => {
+                        return (sub.callback.includes(identifier));
+                    });
+                })
+                .then(found => {
+                    if (!found) {
+                        return exports.subscribeToEvents(identifier)
+                    }
+                    return null;
+                })
+                .then(response => {
+                    if (!response) {
+                        console.log(`Already subscribed to events for ${identifier}`);
+                        return;
+                    }
+                    console.log(`Subscribed to events for ${identifier}`);
+                })
+                .catch(async err => {
+                    let token = await errorHandler(err, identifier);
+                    if (token) {
+                        exports.subscribeToEvents(identifier)
+                            .then(response => {
+                                if (!response) {
+                                    console.log(`Already subscribed to events for ${identifier}`);
+                                    return;
+                                }
+                                console.log(`Subscribed to events for ${identifier}`);
+                            })
+                            .catch(err => console.log(err));
+                    }
                 });
-                if (!found) {
-                    exports.subscribeToEvents(identifier);
-                }
-            })
-            .catch(err => console.log(err));
         }
         globals.users[identifier] = user;
     }
@@ -33,73 +56,75 @@ exports.addUser = user => {
 }
 
 exports.removeUser = identifier => {
-    if (identifier && globals.users[identifier]) {
-        delete globals.users[identifier];
-    } 
+    console.log('Removing user');
+    if (identifier) {
+        exports.getSubscriptions()
+            .then(response => {
+                console.log(response.data.total);
+                return  response.data.data.find(sub => {
+                    return (sub.callback.includes(identifier));
+                });
+            })
+            .then(found => {
+                if (found) {
+                    return exports.unsubscribeFromEvents(identifier);
+                }
+                return null;
+            })
+            .then(response => {
+                delete globals.users[identifier];
+                if (!response) {
+                    console.log(`No subscriptions found for ${identifier}`);
+                    return;
+                }
+                console.log(`Unsubscribed from events for ${identifier}`);
+            })
+            .catch(async err => {
+                let token = await errorHandler(err, identifier);
+                if (token) {
+                    exports.unsubscribeFromEvents(identifier)
+                        .then(response => {
+                            delete globals.users[identifier];
+                            if (!response) {
+                                console.log(`No subscriptions found for ${identifier}`);
+                                return;
+                            }
+                            console.log(`Unsubscribed from events for ${identifier}`);
+                        })
+                        .catch(err => console.log(err));
+                }
+            });
+    }
 }
 
-exports.subscribeToEvents = (identifier, isRetry) => {
+exports.subscribeToEvents = function(identifier) {
     console.log('Subscribing to events');
     if (identifier && globals.users[identifier]) {
         const callback = `${myURL}/api/user`,
               mode = 'subscribe',
               subURL = 'https://api.twitch.tv/helix';
         const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
-        Promise.all([
+        return Promise.all([
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/followers/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}`, 'hub.lease_seconds': 864000 }, config),
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}`, 'hub.lease_seconds': 864000 }, config)
-        ])
-        .then(([followResponse, streamResponse]) => {
-            if (followResponse.status >= 200 && followResponse.status < 300) {
-                console.log('Follows subscription request sent');
-            } else {
-                console.log('Failed to Subscribe to follows');
-            }
-            if (streamResponse.status >= 200 && streamResponse.status < 300) {
-                console.log('Stream change subscription request sent');
-            } else {
-                console.log('Failed to Subscribe to stream changes');
-            }
-        })
-        .catch(err => {
-            let response = errorHandler(err, identifier);
-            if (response && !isRetry) {
-                exports.subscribeToEvents(identifier, true);
-            }
-        });
+        ]);
     }
+    return new Promise((resolve, reject) => reject({ msg: 'User not found', action: `Subscribe to user: ${identifier}` }));
 }
 
-exports.unsubscribeFromEvents = (identifier, isRetry) => {
+exports.unsubscribeFromEvents = function(identifier) {
     console.log('Unsubscribing from events');
     if (identifier && globals.users[identifier]) {
         const callback = `${myURL}/api/user`,
               mode = 'unsubscribe',
               subURL = 'https://api.twitch.tv/helix';
         const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
-        Promise.all([
+        return Promise.all([
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/followers/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}` }, config),
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}` }, config)
-        ])
-        .then(([followResponse, streamResponse]) => {
-            if (followResponse.status >= 200 && followResponse.status < 300) {
-                console.log('Unsubscribing from follows');
-            } else {
-                console.log('Failed to unsubscribe from follows');
-            }
-            if (streamResponse.status >= 200 && streamResponse.status < 300) {
-                console.log('Unsubscribing from stream changes');
-            } else {
-                console.log('Failed to unsubscribe from stream changes');
-            }
-        })
-        .catch(err => {
-            let response = errorHandler(err, identifier);
-            if (response && !isRetry) {
-                exports.unsubscribeFromEvents(identifier, true);
-            }
-        });
+        ]);
     }
+    return new Promise((resolve, reject) => reject({ msg: 'User not found', action: `Unsubscribe from user: ${identifier}` }));
 }
 
 exports.getSubscriptions = () => {

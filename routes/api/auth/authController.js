@@ -7,7 +7,6 @@ const jwt = require('jsonwebtoken');
 const { addUser } = require('../../api/user/userController');
 const globals = require('../../../config/globals');
 
-
 exports.getAppAccessToken = () => {
     const url = `${baseAuthURL}/token`;
     const grantType = 'client_credentials';

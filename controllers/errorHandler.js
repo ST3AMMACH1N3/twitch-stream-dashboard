@@ -24,5 +24,6 @@ exports.errorHandler = async (err, identifier) => {
         return { identifier };
     } else {
         console.log(err);
+        return null;
     }
 }

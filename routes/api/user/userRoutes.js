@@ -3,35 +3,15 @@ const { validateToken, refreshToken, respondToVerification } = require('../auth/
 const { addUser, updateFollowers, updateStream, unsubscribeFromEvents, getSubscriptions, removeUser } = require('../user/userController');
 const globals = require('../../../config/globals');
 
-router.get('/unsubscribe', (req, res) => {
-    const { identifier } = req.cookies;
-    if (identifier) {
-        unsubscribeFromEvents(identifier);
-        res.json({ msg: 'Unsubscribed' });
-    }
-})
-
 router.get('/remove', (req, res) => {
     const { identifier } = req.cookies;
     if (identifier) {
+        unsubscribeFromEvents(identifier);
         removeUser(identifier);
         res.json({ msg: 'User removed' });
     }
 })
 
-router.get('/refresh', async (req, res) => {
-    const { identifier } = req.cookies;
-    if (identifier && globals.users[identifier]) {
-        let token = await refreshToken(globals.users[identifier].refresh_token);
-        if (token) {
-            globals.users[identifier].refresh_token = token.refresh_token;
-            globals.users[identifier].access_token = token.access_token;
-            addUser(globals.users[identifier]);
-            return res.json({ msg: 'Token refreshed' });
-        }
-    }
-    res.json({ msg: 'Could not refresh token' });
-})
 
 router.get('/subscriptions', (req, res) => {
     getSubscriptions()
@@ -49,5 +29,10 @@ router.route('/followers/:id')
 router.route('/streamChange/:id')
         .get(respondToVerification)
         .post(updateStream);
+
+router.get('/', (req, res) => {
+    console.log(globals.users);
+    res.json(globals.users);
+})
 
 module.exports = router;
