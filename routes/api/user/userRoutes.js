@@ -30,9 +30,4 @@ router.route('/streamChange/:id')
         .get(respondToVerification)
         .post(updateStream);
 
-router.get('/', (req, res) => {
-    console.log(globals.users);
-    res.json(globals.users);
-})
-
 module.exports = router;
