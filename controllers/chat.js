@@ -1,40 +1,28 @@
-const WebSocket = require('ws');
-const url = 'wss://irc-ws.chat.twitch.tv:443';
+const tmi = require('tmi.js');
+const client = new tmi.client();
 
-const ws = new WebSocket(url);
-ws.on('open', handleOpen);
-ws.on('message', handleMessage);
-ws.on('ping', handlePing);
-ws.on('close', handleClose);
-ws.on('error', handleError);
+client.on('connected', connectedHandler);
+client.on('message', messageHandler);
+client.connect();
 
-function handleOpen() {
-    console.log('Successfully Connected to twitch chat');
+function connectedHandler(addr, port) {
+    console.log(`Connected to ${addr}:${port}`);
 }
 
-function handleMessage(data) {
-    console.log(data);
-}
-
-function handlePing(data) {
-    console.log('Ping');
-    console.log(data)
-}
-
-function handleClose(code, reason) {
-    console.log('Disconnected');
-    console.log(code, reason);
-}
-
-function handleError(error) {
-    console.log('Error');
-    console.log(error);
+function messageHandler(target, context, msg, self) {
+    console.log(`Target: ${target}`);
+    console.log(`Context: ${JSON.stringify(context, null, 2)}`);
+    console.log(`Msg: ${msg}`);
 }
 
 exports.joinChannel = channel => {
-    ws.send(`JOIN #${channel}`);
+    return client.join(channel);
 }
 
 exports.leaveChannel = channel => {
-    ws.send(`PART #${channel}`);
+    return client.part(channel);
+}
+
+exports.getChannels = () => {
+    return client.getChannels();
 }

@@ -4,6 +4,7 @@ const axios = require('axios');
 const subscriptionURL = 'https://api.twitch.tv/helix/webhooks/hub';
 const myURL = process.env.MY_URL || 'http://localhost:3000';
 const errorHandler = require('../../../controllers/errorHandler');
+const { joinChannel, leaveChannel, getChannels } = require('../../../controllers/chat');
 
 exports.findUser = identifier => {
     return db.User.findOne({
@@ -18,7 +19,15 @@ exports.addUser = user => {
     const { identifier } = user;
     if (identifier) {
         if (!globals.users[identifier]) {
-            exports.getSubscriptions()
+            let channels = getChannels();
+            let username = '#' + user.preferred_username.toLowerCase();
+            if (channels.includes(username)) {
+                return;
+            }
+            joinChannel(user.preferred_username)
+                .then(response => {
+                    return exports.getSubscriptions();
+                })
                 .then(response => {
                     console.log(response.data.total);
                     return  response.data.data.find(sub => {
@@ -32,11 +41,11 @@ exports.addUser = user => {
                     return null;
                 })
                 .then(response => {
-                    if (!response) {
-                        console.log(`Already subscribed to events for ${identifier}`);
-                        return;
+                    if (response) {
+                        console.log(`Subscribed to events for ${identifier}`);
+                    } else {
+                        console.log(`Already subscribed to events for ${identifier}`); 
                     }
-                    console.log(`Subscribed to events for ${identifier}`);
                 })
                 .catch(async err => {
                     let token = await errorHandler(err, identifier);
@@ -66,7 +75,15 @@ exports.addUser = user => {
 exports.removeUser = identifier => {
     console.log('Removing user');
     if (identifier) {
-        exports.getSubscriptions()
+        let channels = getChannels();
+        let username = '#' + globals.users[identifier].preferred_username.toLowerCase();
+        if (!channels.includes(username)) {
+            return;
+        }
+        leaveChannel(username)
+            .then(response => {
+                return exports.getSubscriptions();
+            })
             .then(response => {
                 console.log(response.data.total);
                 return  response.data.data.find(sub => {
@@ -80,12 +97,12 @@ exports.removeUser = identifier => {
                 return null;
             })
             .then(response => {
-                delete globals.users[identifier];
-                if (!response) {
+                if (response) {
+                    console.log(`Unsubscribed from events for ${identifier}`);
+                } else {
                     console.log(`No subscriptions found for ${identifier}`);
-                    return;
                 }
-                console.log(`Unsubscribed from events for ${identifier}`);
+                delete globals.users[identifier];
             })
             .catch(async err => {
                 let token = await errorHandler(err, identifier);

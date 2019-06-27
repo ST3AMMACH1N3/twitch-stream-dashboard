@@ -25,6 +25,8 @@ app.set('view engine', 'handlebars');
 const { getAppAccessToken } = require('./routes/api/auth/authController');
 getAppAccessToken();
 
+require('./controllers/chat');
+
 app.use(routes);
 
 db.sequelize
