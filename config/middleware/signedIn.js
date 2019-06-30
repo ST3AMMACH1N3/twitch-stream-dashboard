@@ -14,11 +14,13 @@ module.exports = async (req, res, next) => {
                 res.redirect('/');
                 return console.log(`User ${identifier} has cookie but is not in the database`);
             }
-            addUser(user.get({ plain: true }));
+            let created = await addUser(user.get({ plain: true }));
+            next();
         } catch(err) {
             res.status(500).send(err);
             return console.log(err);
         }
+    } else {
+        next();
     }
-    next();
 }

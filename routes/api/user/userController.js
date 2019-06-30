@@ -24,6 +24,8 @@ exports.upsertUser = user => {
 }
 
 exports.addUser = user => {
+    console.log('Adding user');
+    console.log(globals.users);
     let { identifier } = user;
     return db.User.findOrCreate({
         where: {
@@ -33,6 +35,7 @@ exports.addUser = user => {
     })
     .then(([dbUser, created]) => {
         if (globals.users[identifier]) {
+            console.log('User is already loaded');
             return false;
         }
         let user = dbUser.get({ plain: true });
@@ -43,8 +46,9 @@ exports.addUser = user => {
             user.chatbot ? joinChannel(username) : null
         ])
         .then(([analytics, chat]) => {
+            console.log('Back from subscribing');
             analytics ? console.log(`Subscribed to analytics for ${user.preferred_username}`) : null;
-            chat ? console.log(`Join chat for ${user.preferred_username}`) : null;
+            chat ? console.log(`Joined chat for ${user.preferred_username}`) : null;
         })
         .catch(err => {
             console.log(err);
@@ -55,9 +59,10 @@ exports.addUser = user => {
 }
 
 exports.removeUser = identifier => {
-    if (!identfier || !globals.users[identifier]) {
+    if (!identifier || !globals.users[identifier]) {
         return;
     }
+    let user = globals.users[identifier];
     let username = '#' + user.preferred_username.toLowerCase();
     Promise.all([
         exports.unsubscribeFromEvents(identifier),
@@ -66,7 +71,8 @@ exports.removeUser = identifier => {
     .then(([analytics, chat]) => {
         analytics ? console.log(`Unsubscribed from analytics for ${user.preferred_username}`) : null;
         chat ? console.log(`Left chat for ${user.preferred_username}`) : null;
-        delete global.users[identifier];
+        console.log('Deleting reference');
+        delete globals.users[identifier];
     })
     .catch(err => {
         console.log(err);
@@ -109,7 +115,7 @@ exports.subscribeToEvents = identifier => {
     
 }
 
-exports.unsubscribeFromEvents = identifier => {
+exports.unsubscribeFromEvents = async identifier => {
     console.log('Unsubscribing from events');
     if (!identifier || !globals.users[identifier]) {
         return console.log('User not found, cannot unsubscribe from events');
@@ -121,7 +127,7 @@ exports.unsubscribeFromEvents = identifier => {
                 return sub.callback.includes(identifier);
             });
             if (!found) {
-                return console.log(`Not subscribed to events for ${globals.users[identifier].preferred_username}`);
+                return console.log(`Not subscribed to events for ${globals.users[identifier] ? globals.users[identifier].preferred_username : 'user'}`);
             }
             const callback = `${myURL}/api/user`,
             mode = 'unsubscribe',

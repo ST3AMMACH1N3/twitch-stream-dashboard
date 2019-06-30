@@ -3,23 +3,11 @@ const db = require('../../models');
 const globals = require('../../config/globals');
 const myURL = process.env.MY_URL || 'http://localhost:3000';
 const signedIn = require('../../config/middleware/signedIn');
+const { addUser } = require('../api/user/userController');
 
 router.get('/', (req, res) => {
     const { identifier } = req.cookies;
     if (identifier) {
-        db.User.findOne({
-            where: {
-                identifier
-            }
-        })
-        .then(user => {
-            if (user) {
-                globals.users[identifier] = user.get({ plain: true });
-            }
-        })
-        .catch(err => {
-            console.log(err);
-        })
         return res.redirect('/dashboard');
     }
     res.render('index');
