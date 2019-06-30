@@ -10,9 +10,16 @@ function connectedHandler(addr, port) {
 }
 
 function messageHandler(target, context, msg, self) {
-    console.log(`Target: ${target}`);
-    console.log(`Context: ${JSON.stringify(context, null, 2)}`);
-    console.log(`Msg: ${msg}`);
+    if (msg.toLowerCase() === 'ping') {
+        client.say(target, 'Pong')
+            .then(data => {
+
+            })
+            .catch(err => console.log(err));
+    }
+    // console.log(`Target: ${target}`);
+    // console.log(`Context: ${JSON.stringify(context, null, 2)}`);
+    // console.log(`Msg: ${msg}`);
 }
 
 exports.joinChannel = channel => {
