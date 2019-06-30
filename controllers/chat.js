@@ -1,5 +1,13 @@
 const tmi = require('tmi.js');
-const client = new tmi.client();
+
+const options = {
+    identity: {
+        username: 'STANbot',
+        password: process.env.STANBOT_OAUTH
+    }
+}
+
+const client = new tmi.client(options);
 
 client.on('connected', connectedHandler);
 client.on('message', messageHandler);
