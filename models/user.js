@@ -20,6 +20,14 @@ module.exports = (sequelize, DataTypes) => {
         },
         access_token: {
             type: DataTypes.STRING
+        },
+        chatbot: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
+        },
+        analytics: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: true
         }
     });
 

@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { validateToken, refreshToken, respondToVerification } = require('../auth/authController');
-const { addUser, updateFollowers, updateStream, unsubscribeFromEvents, getSubscriptions, removeUser } = require('../user/userController');
+const { addUser, updateFollows, updateSubscriptions, updateStream, unsubscribeFromEvents, getSubscriptions, removeUser } = require('../user/userController');
 const globals = require('../../../config/globals');
 
 router.get('/remove', (req, res) => {
@@ -21,9 +21,13 @@ router.get('/subscriptions', (req, res) => {
     .catch(err => console.log(err));
 })
 
-router.route('/followers/:id')
+router.route('/follows/:id')
         .get(respondToVerification)
-        .post(updateFollowers);
+        .post(updateFollows);
+
+router.route('/subscriptions/:id')
+        .get(respondToVerification)
+        .post(updateSubscriptions);
 
 router.route('/streamChange/:id')
         .get(respondToVerification)
