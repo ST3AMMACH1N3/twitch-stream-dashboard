@@ -24,12 +24,17 @@ app.set('view engine', 'handlebars');
 
 const globals = require('./config/globals');
 const { getAppAccessToken } = require('./routes/api/auth/authController');
-let appAccessToken = getAppAccessToken();
-if (appAccessToken) {
-    globals.appAccessToken = appAccessToken;
-} else {
-    console.log('Failed to get app access token');
-}
+getAppAccessToken()
+    .then(appAccessToken => {
+        if (appAccessToken) {
+            globals.appAccessToken = appAccessToken;
+        } else {
+            console.log('Failed to get app access token');
+        }
+    })
+    .catch(err => console.log(err));
+
+
 
 require('./controllers/chat');
 
