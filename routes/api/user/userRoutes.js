@@ -12,13 +12,9 @@ router.get('/remove', (req, res) => {
     }
 })
 
-router.get('/subscriptions', (req, res) => {
-    getSubscriptions()
-    .then(response => {
-        console.log(response.data);
-        res.json(response.data);
-    })
-    .catch(err => console.log(err));
+router.get('/subscriptions', async (req, res) => {
+    let subscriptions = getSubscriptions();
+    res.json(subscriptions);
 })
 
 router.route('/follows/:id')

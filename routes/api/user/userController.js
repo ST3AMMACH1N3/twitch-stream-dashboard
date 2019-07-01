@@ -107,81 +107,69 @@ exports.removeUser = identifier => {
     })
 }
 
-exports.subscribeToEvents = (identifier, retry) => {
+exports.subscribeToEvents = async (identifier, retry) => {
     console.log('Subscribing to events');
     if (!identifier || !globals.users[identifier]) {
         return console.log('User not found, cannot subscribe to events');
     }
-    return exports.getSubscriptions()
-        .then(response => {
-            let subscriptions = response.data.data;
-            let found = subscriptions.find(sub => {
-                return sub.callback.includes(identifier);
-            });
-            if (found) {
-                return console.log(`Already subscribed to events for ${globals.users[identifier].preferred_username}`);
-            }
-            const callback = `${myURL}/api/user`,
-            mode = 'subscribe',
-            subURL = 'https://api.twitch.tv/helix';
-            const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
-            return Promise.all([
-                axios.post(subscriptionURL, { 'hub.callback': `${callback}/follows/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}`, 'hub.lease_seconds': 864000 }, config),
-                axios.post(subscriptionURL, { 'hub.callback': `${callback}/subscriptions/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/subscriptions/events?broadcaster_id=${identifier}&first=1`, 'hub.lease_seconds': 864000 }, config),
-                axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}`, 'hub.lease_seconds': 864000 }, config)
-            ]);
-        })
-        .then(response => {
-            if (!response) {
-                return false;
-            }
-            return true;
-        })
-        .catch(err => {
-            errorHandler(err, exports.subscribeToEvents, identifier, retry);
+    try {
+        let subscriptions = await exports.getSubscriptions();
+        let found = subscriptions.find(sub => {
+            return sub.callback.includes(identifier);
         });
-    
+        if (found) {
+            return console.log(`Already subscribed to events for ${globals.users[identifier].preferred_username}`);
+        }
+        const callback = `${myURL}/api/user`,
+        mode = 'subscribe',
+        subURL = 'https://api.twitch.tv/helix';
+        const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
+        let response = await Promise.all([
+            axios.post(subscriptionURL, { 'hub.callback': `${callback}/follows/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}`, 'hub.lease_seconds': 864000 }, config),
+            axios.post(subscriptionURL, { 'hub.callback': `${callback}/subscriptions/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/subscriptions/events?broadcaster_id=${identifier}&first=1`, 'hub.lease_seconds': 864000 }, config),
+            axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}`, 'hub.lease_seconds': 864000 }, config)
+        ]);
+    } catch (err) {
+        errorHandler(err, exports.subscribeToEvents, identifier, retry);
+    }
 }
 
-exports.unsubscribeFromEvents = (identifier, retry) => {
+exports.unsubscribeFromEvents = async (identifier, retry) => {
     console.log('Unsubscribing from events');
     if (!identifier || !globals.users[identifier]) {
         return console.log('User not found, cannot unsubscribe from events');
     }
-    return exports.getSubscriptions()
-        .then(response => {
-            let subscriptions = response.data.data;
-            let found = subscriptions.find(sub => {
-                return sub.callback.includes(identifier);
-            });
-            if (!found) {
-                return console.log(`Not subscribed to events for ${globals.users[identifier] ? globals.users[identifier].preferred_username : 'user'}`);
-            }
-            const callback = `${myURL}/api/user`,
-            mode = 'unsubscribe',
-            subURL = 'https://api.twitch.tv/helix';
-            const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
-            return Promise.all([
-                axios.post(subscriptionURL, { 'hub.callback': `${callback}/follows/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}` }, config),
-                axios.post(subscriptionURL, { 'hub.callback': `${callback}/subscriptions/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/subscriptions/events?broadcaster_id=${identifier}&first=1` }, config),
-                axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}` }, config)      
-            ]);
-        })
-        .then(response => {
-            if (!response) {
-                return false;
-            }
-            return true;
-        })
-        .catch(err => {
-            errorHandler(err, exports.unsubscribeFromEvents, identifier, retry);
+    try {
+        let subscriptions = await exports.getSubscriptions();
+        let found = subscriptions.find(sub => {
+            return sub.callback.includes(identifier);
         });
+        if (!found) {
+            return console.log(`Not subscribed to events for ${globals.users[identifier] ? globals.users[identifier].preferred_username : 'user'}`);
+        }
+        const callback = `${myURL}/api/user`,
+        mode = 'unsubscribe',
+        subURL = 'https://api.twitch.tv/helix';
+        const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
+        let response = await Promise.all([
+            axios.post(subscriptionURL, { 'hub.callback': `${callback}/follows/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}` }, config),
+            axios.post(subscriptionURL, { 'hub.callback': `${callback}/subscriptions/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/subscriptions/events?broadcaster_id=${identifier}&first=1` }, config),
+            axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}` }, config)      
+        ]);   
+    } catch(err) {
+        errorHandler(err, exports.unsubscribeFromEvents, identifier, retry);
+    } 
 }
 
-exports.getSubscriptions = () => {
+exports.getSubscriptions = async () => {
     console.log('Getting subscriptions');
     const config = { headers: { Authorization: `Bearer ${globals.appAccessToken}` } };
-    return axios.get('https://api.twitch.tv/helix/webhooks/subscriptions', config);
+    try {
+        let response = await axios.get('https://api.twitch.tv/helix/webhooks/subscriptions', config);
+        return response.data.data;
+    } catch(err) {
+        return console.log(err);
+    }
 }
 
 exports.updateFollows = (req, res) => {
