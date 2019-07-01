@@ -3,15 +3,19 @@ const globals = require('../../../config/globals');
 const axios = require('axios');
 const subscriptionURL = 'https://api.twitch.tv/helix/webhooks/hub';
 const myURL = process.env.MY_URL || 'http://localhost:3000';
+const jwt = require('jsonwebtoken');
 const errorHandler = require('../../../controllers/errorHandler');
+const { getUserAuthCode, getUserAccessToken } = require('../auth/authController');
 const { joinChannel, leaveChannel, getChannels } = require('../../../controllers/chat');
+const { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, MY_URL } = process.env;
+const baseAuthURL = 'https://id.twitch.tv/oauth2';
 
 exports.findUser = identifier => {
     return db.User.findOne({
-                where: {
-                    identifier
-                }
-            });
+        where: {
+            identifier
+        }
+    });
 }
 
 exports.upsertUser = user => {
@@ -23,9 +27,33 @@ exports.upsertUser = user => {
     });
 }
 
+exports.authenticateUser = async (req, res) => {
+    const code = getUserAuthCode(req);
+    if (!code) {
+        console.log('Code not recieved');
+        return res.json({ msg: 'We were unable to get an authorization code.' });
+    }
+    const info = await getUserAccessToken(code);
+    if (!info) {
+        console.log('Access token not recieved');
+        return res.json({ msg: 'We were unable to get an access token' });
+    }
+    const { access_token, id_token, refresh_token } = info;
+    const { aud, iss, sub, preferred_username } = jwt.decode(id_token);
+    if (aud != TWITCH_CLIENT_ID || iss != baseAuthURL) {
+        console.log('Id token not verified');
+        return res.json({ msg: 'The token we recieved could not be verified' });
+    }
+    res.cookie('identifier', sub);
+    let created = await exports.addUser({ identifier: sub, preferred_username, refresh_token, access_token });
+    if (created) {
+        return res.redirect('/tutorial');
+    }
+    return res.redirect('/dashboard');
+}
+
 exports.addUser = user => {
     console.log('Adding user');
-    console.log(globals.users);
     let { identifier } = user;
     return db.User.findOrCreate({
         where: {
@@ -79,7 +107,7 @@ exports.removeUser = identifier => {
     })
 }
 
-exports.subscribeToEvents = identifier => {
+exports.subscribeToEvents = (identifier, retry) => {
     console.log('Subscribing to events');
     if (!identifier || !globals.users[identifier]) {
         return console.log('User not found, cannot subscribe to events');
@@ -110,12 +138,12 @@ exports.subscribeToEvents = identifier => {
             return true;
         })
         .catch(err => {
-            console.log(err);
+            errorHandler(err, exports.subscribeToEvents, identifier, retry);
         });
     
 }
 
-exports.unsubscribeFromEvents = async identifier => {
+exports.unsubscribeFromEvents = (identifier, retry) => {
     console.log('Unsubscribing from events');
     if (!identifier || !globals.users[identifier]) {
         return console.log('User not found, cannot unsubscribe from events');
@@ -146,7 +174,7 @@ exports.unsubscribeFromEvents = async identifier => {
             return true;
         })
         .catch(err => {
-            console.log(err);
+            errorHandler(err, exports.unsubscribeFromEvents, identifier, retry);
         });
 }
 

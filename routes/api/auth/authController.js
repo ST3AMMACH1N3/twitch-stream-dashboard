@@ -3,19 +3,16 @@ const { TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, MY_URL } = process.env;
 const myURL = MY_URL || 'http://localhost:3000';
 const redirectURI = `${myURL}/api/auth`;
 const baseAuthURL = 'https://id.twitch.tv/oauth2';
-const jwt = require('jsonwebtoken');
-const { addUser } = require('../../api/user/userController');
-const globals = require('../../../config/globals');
 
-exports.getAppAccessToken = () => {
+exports.getAppAccessToken = async () => {
     const url = `${baseAuthURL}/token`;
     const grantType = 'client_credentials';
-    axios
-        .post(`${url}?client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}&grant_type=${grantType}`)
-        .then(response => {
-            globals.appAccessToken = response.data.access_token;
-        })
-        .catch(err => console.log(err));
+    try {
+        let response = await axios.post(`${url}?client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}&grant_type=${grantType}`);
+        return response.data.access_token;
+    } catch(err) {
+        return console.log(err);
+    }
 }
 
 exports.getUserAuthCode = req => {
@@ -43,31 +40,6 @@ exports.getUserAccessToken = code => {
             })
 }
 
-exports.authenticateUser = async (req, res) => {
-    const code = exports.getUserAuthCode(req);
-    if (!code) {
-        console.log('Code not recieved');
-        return res.json({ msg: 'We were unable to get an authorization code.' });
-    }
-    const info = await exports.getUserAccessToken(code);
-    if (!info) {
-        console.log('Access token not recieved');
-        return res.json({ msg: 'We were unable to get an access token' });
-    }
-    const { access_token, id_token, refresh_token } = info;
-    const { aud, iss, sub, preferred_username } = jwt.decode(id_token);
-    if (aud != TWITCH_CLIENT_ID || iss != baseAuthURL) {
-        console.log('Id token not verified');
-        return res.json({ msg: 'The token we recieved could not be verified' });
-    }
-    res.cookie('identifier', sub);
-    let created = await addUser({ identifier: sub, preferred_username, refresh_token, access_token });
-    if (created) {
-        return res.redirect('/tutorial');
-    }
-    return res.redirect('/dashboard');
-}
-
 exports.revokeAccessToken = token => {
     const url = `${baseAuthURL}/revoke`;
     axios
@@ -76,29 +48,27 @@ exports.revokeAccessToken = token => {
         .catch(err => console.log(err));
 }
 
-exports.refreshToken = async (refreshToken, accessToken) => {
+exports.refreshToken = async refreshToken => {
     const url = `${baseAuthURL}/token`;
     const grantType = 'refresh_token';
-    return axios
-            .post(`${url}?grant_type=${grantType}&refresh_token=${refreshToken}&client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}`)
-            .then(response => {
-                if (response.status == 200) {
-                    return response.data;
-                }
-                return null
-            })
-            .catch(err => {
-                console.log(err);
-            })
+    try {
+        const response =  await axios.post(`${url}?grant_type=${grantType}&refresh_token=${refreshToken}&client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}`)
+        if (response.status == 200) {
+            return response.data;
+        }
+        return console.log('Could not refresh token');
+    } catch (err) {
+        return console.log(err);
+    }
 }
 
-exports.validateToken = accessToken => {
-    axios
-        .get(`${baseAuthURL}/validate`, { headers: { Authorization: `OAuth ${accessToken}` } })
-        .then(response => {
-            console.log(response);
-        })
-        .catch(err => console.log(err));
+exports.validateToken = async accessToken => {
+    try {
+        await axios.get(`${baseAuthURL}/validate`, { headers: { Authorization: `OAuth ${accessToken}` } });
+        return true;
+    } catch (err) {
+        return false;
+    }
 }
 
 exports.respondToVerification = (req, res) => {

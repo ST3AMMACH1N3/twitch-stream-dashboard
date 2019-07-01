@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const globals = require('../../../config/globals');
-const { authenticateUser, validateToken } = require('./authController');
+const { validateToken } = require('./authController');
+const { authenticateUser } = require('../user/userController');
 
 router.get('/', authenticateUser);
 
