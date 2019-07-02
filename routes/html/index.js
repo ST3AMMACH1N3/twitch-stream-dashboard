@@ -16,7 +16,7 @@ router.get('/', (req, res) => {
 router.get('/signin', (req, res) => {
     const { TWITCH_CLIENT_ID } = process.env;
     const redirectURI = `${myURL}/api/auth`;
-    const scope='openid';
+    const scope='openid+channel:read:subscriptions';
     res.redirect(`https://id.twitch.tv/oauth2/authorize?client_id=${TWITCH_CLIENT_ID}&redirect_uri=${redirectURI}&response_type=code&scope=${scope}`);
 })
 
