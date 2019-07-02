@@ -76,5 +76,6 @@ exports.validateToken = async accessToken => {
 
 exports.respondToVerification = (req, res) => {
     console.log('Responding to verification');
+    console.log(req.originalUrl);
     res.status(200).send(req.query['hub.challenge']);
 }
