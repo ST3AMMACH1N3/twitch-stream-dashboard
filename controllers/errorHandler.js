@@ -2,7 +2,7 @@ const globals = require('../config/globals');
 const { refreshToken, getAppAccessToken, validateToken } = require('../routes/api/auth/authController')
 
 module.exports = errorHandler = async (err, callback, ...args) => {
-    console.log(err);
+    console.log(err.response.data);
     if (!err.response.data || err.response.data.status != 401 || args[args.length - 1]) {
         return console.log(err);
     }
