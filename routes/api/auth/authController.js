@@ -51,9 +51,12 @@ exports.revokeAccessToken = token => {
 exports.refreshToken = async refreshToken => {
     const url = `${baseAuthURL}/token`;
     const grantType = 'refresh_token';
+    console.log('Refreshing token');
     try {
         const response =  await axios.post(`${url}?grant_type=${grantType}&refresh_token=${refreshToken}&client_id=${TWITCH_CLIENT_ID}&client_secret=${TWITCH_CLIENT_SECRET}`)
         if (response.status == 200) {
+            console.log('Got refresh response');
+            console.log(response.data);
             return response.data;
         }
         return console.log('Could not refresh token');
