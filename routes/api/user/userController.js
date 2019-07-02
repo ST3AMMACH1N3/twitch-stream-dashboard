@@ -127,7 +127,7 @@ exports.subscribeToEvents = async (identifier, retry) => {
         const callback = `${myURL}/api/user`,
         mode = 'subscribe',
         subURL = 'https://api.twitch.tv/helix';
-        const config = { headers: { Authorization: `Bearer ${globals.appAccessToken}` } };
+        const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
         let response = await Promise.all([
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/follows/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}`, 'hub.lease_seconds': 864000 }, config),
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/subscriptions/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/subscriptions/events?broadcaster_id=${identifier}&first=1`, 'hub.lease_seconds': 864000 }, config),
@@ -157,7 +157,7 @@ exports.unsubscribeFromEvents = async (identifier, retry) => {
         const callback = `${myURL}/api/user`,
         mode = 'unsubscribe',
         subURL = 'https://api.twitch.tv/helix';
-        const config = { headers: { Authorization: `Bearer ${globals.appAccessToken}` } };
+        const config = { headers: { Authorization: `Bearer ${globals.users[identifier].access_token}` } };
         let response = await Promise.all([
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/follows/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/users/follows?first=1&to_id=${identifier}` }, config),
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/subscriptions/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/subscriptions/events?broadcaster_id=${identifier}&first=1` }, config),
