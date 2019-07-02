@@ -136,7 +136,11 @@ exports.subscribeToEvents = async (identifier, retry) => {
         ]);
     } catch (err) {
         await errorHandler(err, exports.subscribeToEvents, identifier, retry);
-        exports.upsertUser(globals.users[identifier]);
+        if (globals.users[identifier]) {
+            exports.upsertUser(globals.users[identifier])
+                .then()
+                .catch(err => console.log(err));
+        }
     }
 }
 
@@ -167,7 +171,11 @@ exports.unsubscribeFromEvents = async (identifier, retry) => {
         ])
     } catch(err) {
         await errorHandler(err, exports.unsubscribeFromEvents, identifier, retry);
-        exports.upsertUser(globals.users[identifier]);
+        if (globals.users[identifier]) {
+            exports.upsertUser(globals.users[identifier])
+                .then()
+                .catch(err => console.log(err));
+        }
     } 
 }
 
