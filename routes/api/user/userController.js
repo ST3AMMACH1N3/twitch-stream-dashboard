@@ -20,6 +20,7 @@ exports.findUser = identifier => {
 
 exports.upsertUser = user => {
     let { identifier } = user;
+    console.log('Upserting user');
     return db.User.upsert(user, {
         where: {
             identifier
@@ -134,7 +135,8 @@ exports.subscribeToEvents = async (identifier, retry) => {
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}`, 'hub.lease_seconds': 864000 }, config)
         ]);
     } catch (err) {
-        errorHandler(err, exports.subscribeToEvents, identifier, retry);
+        await errorHandler(err, exports.subscribeToEvents, identifier, retry);
+        exports.upsertUser(globals.users[identifier]);
     }
 }
 
@@ -164,7 +166,8 @@ exports.unsubscribeFromEvents = async (identifier, retry) => {
             axios.post(subscriptionURL, { 'hub.callback': `${callback}/streamChange/${identifier}`, 'hub.mode': mode, 'hub.topic': `${subURL}/streams?user_id=${identifier}` }, config)      
         ])
     } catch(err) {
-        errorHandler(err, exports.unsubscribeFromEvents, identifier, retry);
+        await errorHandler(err, exports.unsubscribeFromEvents, identifier, retry);
+        exports.upsertUser(globals.users[identifier]);
     } 
 }
 
