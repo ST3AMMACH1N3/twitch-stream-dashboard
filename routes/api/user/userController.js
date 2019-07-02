@@ -174,7 +174,6 @@ exports.getSubscriptions = async () => {
     try {
         let response = await axios.get('https://api.twitch.tv/helix/webhooks/subscriptions', config);
         console.log('Got response');
-        console.log(response.data);
         return response.data.data;
     } catch(err) {
         return console.log(err);

@@ -13,7 +13,7 @@ router.get('/remove', (req, res) => {
 })
 
 router.get('/subscriptions', async (req, res) => {
-    let subscriptions = getSubscriptions();
+    let subscriptions = await getSubscriptions();
     res.json(subscriptions);
 })
 
