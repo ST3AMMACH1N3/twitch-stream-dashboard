@@ -8,11 +8,12 @@ module.exports = errorHandler = async (err, callback, ...args) => {
     }
     try { 
         if (args[0] && globals.users[args[0]]) {
-            let newToken = await refreshToken(globals.users[args[0].refresh_token]);
+            let newToken = await refreshToken(globals.users[args[0]].refresh_token);
             if (newToken && newToken.refresh_token && newToken.access_token) {
                 console.log('New token aquired, trying again');
                 globals.users[args[0]].refresh_token = newToken.refresh_token;
                 globals.users[args[0]].access_token = newToken.access_token;
+                console.log(globals.users[args[0]]);
                 args[args.length - 1] = true;
                 return callback(...args);
             }
