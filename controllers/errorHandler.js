@@ -5,11 +5,8 @@ module.exports = errorHandler = async (err, callback, ...args) => {
     if (!err.response.data || err.response.data.status != 401 || args[args.length - 1]) {
         return console.log(err);
     }
-    try {
-        let needAppToken = await validateToken(globals.appAccessToken);
-        if (needAppToken) {
-            globals.appAccessToken = await getAppAccessToken();
-        } else if (args[0] && globals.users[args[0]]) {
+    try { 
+        if (args[0] && globals.users[args[0]]) {
             let newToken = await refreshToken(globals.users[args[0].refresh_token]);
             if (newToken && newToken.refresh_token && newToken.access_token) {
                 console.log('New token aquired, trying again');
@@ -21,9 +18,15 @@ module.exports = errorHandler = async (err, callback, ...args) => {
             console.log('Did not recieve new token')
             console.log(err);
         } else {
-            console.log('App access token is valid, but not given an identifier');
-            console.log(err);
-        }
+            let needAppToken = await validateToken(globals.appAccessToken);
+            if (needAppToken) {
+                globals.appAccessToken = await getAppAccessToken();
+            } else {
+                console.log('App access token is valid, but not given an identifier');
+                console.log(err);
+            }
+        } 
+        
     } catch(err) {
         console.log(err);
     }
